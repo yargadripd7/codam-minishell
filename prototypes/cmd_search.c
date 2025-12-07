@@ -75,7 +75,7 @@ char	**ms_get_cmd_strings(t_mult_substr *src, char *suffix)
 {
 	char		**dst;
 	t_substr	cur;
-	int			iter;
+	size_t		iter;
 	int			len;
 
 	dst = (char **)malloc(src->count * sizeof(char *));
@@ -85,7 +85,7 @@ char	**ms_get_cmd_strings(t_mult_substr *src, char *suffix)
 	while (iter < src->count)
 	{
 		cur = src->items[iter];
-		len = snprintf(NULL, 0, "%.*s/%s", (cur.end - cur.begin) + 1, cur.begin, suffix); 
+		len = snprintf(NULL, 0, "%.*s/%s", (int)(cur.end - cur.begin) + 1, cur.begin, suffix); 
 		if (len == -1)
 			return NULL;
 		dst[iter] = malloc(len + 1);
@@ -96,7 +96,7 @@ char	**ms_get_cmd_strings(t_mult_substr *src, char *suffix)
 			return (NULL);
 		}
 		dst[iter][len] = 0;
-		sprintf(dst[iter], "%.*s/%s", cur.end - cur.begin, cur.begin, suffix); 
+		sprintf(dst[iter], "%.*s/%s", (int)(cur.end - cur.begin), cur.begin, suffix); 
 		iter++;
 	}
 	return (dst);

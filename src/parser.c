@@ -11,7 +11,7 @@ void	ms_parse_print(t_parser *parser)
 	(void)parser;
 }
 
-bool	ms_initparser(t_parser *parser)
+bool	ms_parserinit(t_parser *parser)
 {
 	//printf("ms_parser_init() not implemented!\n");
 	(void)parser;

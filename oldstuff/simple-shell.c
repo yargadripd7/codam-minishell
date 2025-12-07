@@ -21,7 +21,8 @@ int	my_pwd(int argc, char **argv)
 	if (getcwd(cwd, 1023) == NULL)
 		return (perror("Error: my_pwd(): getcwd(3)"), EXIT_FAILURE);
 	cwd[1023] = 0;
-	if (write(STDOUT_FILENO, cwd, strlen(cwd)) != strlen(cwd)
+
+	if (write(STDOUT_FILENO, cwd, strlen(cwd)) < 0
 			|| write(STDOUT_FILENO, "\n", 1) != 1)
 		return (perror("Error: my_pwd(): write(2)"), EXIT_FAILURE);
 	return (EXIT_SUCCESS);
@@ -34,6 +35,7 @@ int	my_exit(int argc, char **argv)
 	if (argc == 1)
 		exit(atoi(argv[1]));
 	puts("Error: my_exit() too many arguments\n");
+	return (EXIT_FAILURE);
 }
 
 int	my_echo(int argc, char **argv)
@@ -51,20 +53,21 @@ int	my_export(int argc, char **argv) //TODO: test
 {
 	char	*str;
 	int		i;
-	size_t	str_len;
+	size_t	len;
 	size_t	idlen;
 
 	i = -1;
 	while (++i < argc)
 	{
-		str_len = strlen(argv[i]);
+		str = argv[i];
+		len = strlen(str);
 		idlen = 0;
 		while (str[idlen] && str[idlen] != '=')
 			idlen++;
 		str[idlen] = 0;
-		if (idlen + 1 < str_len && setenv(str, str + idlen + 1, true) == EXIT_FAILURE)
+		if (idlen + 1 < len && setenv(str, str + idlen + 1, 1) == EXIT_FAILURE)
 			return (perror("Error: setenv() failed"), EXIT_FAILURE);
-		else if (idlen + 1 == str_len && setenv(str, "", true) == EXIT_FAILURE)
+		else if (idlen + 1 == len && setenv(str, "", 1) == EXIT_FAILURE)
 			return (perror("Error: setenv() failed"), EXIT_FAILURE);
 	}
 	return (EXIT_SUCCESS);
@@ -152,6 +155,7 @@ int exec(int sub, char **argv, char *next_str, int mode)
 			|| close(next[1]) == -1)
 				return (EXIT_FAILURE);
 
+		printf("INFO: prg=%s, arg=%s sub=%d\n", argv[0], argv[1], sub);
 		if (     !strcmp(argv[0], "echo") )
 			ret = my_echo(sub - 1, argv + 1);
 		else if (!strcmp(argv[0], "cd"))
@@ -205,68 +209,54 @@ int	exec_all(int ac, char **av)
 	{
 		sub = -1;
 		while (++sub + i < ac) //skip to next ; | &
-			if (av[i + sub][0] == ';' || av[i + sub][0] == '|' || av[i + sub][0] == '&')
+			if (strchr("|;&<>", av[i + sub][0]) != NULL)
 				break ;
-		//for (int b = 0; b < sub; b++) printf("got: %s, sub=%d\n", av[i + b], sub);
+		//printf("sub became %d\n", sub);
 
 		if ((i + sub == 0 || i + sub == ac - 1) 
-				&& av[i + sub][0] == '|' && av[i + sub][0] == '&')
-			return (puts("Error: input can not begin or end on &&, ||, |\n"), EXIT_FAILURE);
+			&& (av[i + sub][0] == '|' || av[i + sub][0] == '&'
+			|| av[i + sub][0] == '<' || av[i + sub][0] == '>'))
+			return (puts("Error: input can not begin or end on &&, ||, |, <, <<, >, >>\n"), EXIT_FAILURE);
 		
-		if ((i == 0 || (av[i + sub] && av[i + sub][0] == ';'))
-				&& exec(sub, av + i, av[i + sub], CONCURRENT))
-			return (EXIT_FAILURE);
-		else if (av[i + sub] && av[i + sub][0] == '&' && av[i + sub][1] == '&'
-				&& exec(sub, av + i, av[i + sub], AND))
-			return (EXIT_FAILURE);
-		else if (av[i + sub] && av[i + sub][0] == '|' && av[i + sub][1] == '|'
-				&& exec(sub, av + i, av[i + sub], OR))
-			return (EXIT_FAILURE);
-		else if (av[i + sub] && av[i + sub][0] == '|'
-				&& exec(sub, av + i, av[i + sub], PIPE_PREV))
-			return (EXIT_FAILURE);
+		if (i == 0 || (av[i + sub] && av[i + sub][0] == ';'))
+			exec(sub, av + i, av[i + sub], CONCURRENT);
+		else if (av[i + sub] && av[i + sub][0] == '&' && av[i + sub][1] == '&')
+			exec(sub, av + i, av[i + sub], AND);
+		else if (av[i + sub] && av[i + sub][0] == '|' && av[i + sub][1] == '|')
+			exec(sub, av + i, av[i + sub], OR);
+		else if (av[i + sub] && av[i + sub][0] == '|')
+			exec(sub, av + i, av[i + sub], PIPE_PREV);
 		i += sub;
 	}
 	return (EXIT_SUCCESS);
 }
-//OLD CODE ^^^ should be stable, probably isn't fully
-//
-//
-//NEW CODE VVV why dont i copy ft_split edit it to use delimiters strch() instead of single delim char.
+
 void	free_array(char **strs, int count)
 {
 	while (count--) free(strs[count]);
 }
 
-char	*malloc_len_or_until_chr(char *input, int *i, int len, char *chrs)
+char	*strdup_len_and_move(char *input, int *i, int len)
 {
 	char *ret;
 
-	if (len <= 0)
-	{
-		len = 0;
-		while (input[*i + len] && strchr(chrs, input[*i + len]) == NULL)
-			len++;
-	}
-	*i += len;
 	ret = malloc(len + 1);
 	if (ret)
 	{
-		memcpy(ret, input + *i - len, len);
+		memcpy(ret, input + *i, len);
 		ret[len] = 0;
 	}
-	if (input[*i] == '\'' || input[*i] == '"')
-		(*i)++;
+	*i += len;
 	return (ret);
 }
 
 #define SPLIT_ARRAY_STARTLEN 16
-//returns true on err
 char	**wordsplit(char *input, size_t *inputsize, int *splitcount)
 {
 	char **splitted;
-	int	i;
-	int	malloclen;
+	int    i;
+	int    malloclen;
+	int    len;
 
 	splitted = NULL;
 	*splitcount = 0;
@@ -281,29 +271,37 @@ char	**wordsplit(char *input, size_t *inputsize, int *splitcount)
 			if (splitted == NULL) return (NULL);
 			splitted[malloclen - 1] = NULL;
 		}
-		if (input[i] == '\'' && ++i)
-			splitted[*splitcount] = malloc_len_or_until_chr(input, &i,  0, "'");
-		else if (input[i] == '"' && ++i)
-			splitted[*splitcount] = malloc_len_or_until_chr(input, &i,  0, "\"");
-		else if (input[i] == '&' && input[i + 1] == '&')
-			splitted[*splitcount] = malloc_len_or_until_chr(input, &i,  2, NULL);
+		if (input[i] == '&' && input[i + 1] == '&')
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  2);
 		else if (input[i] == '|' && input[i + 1] == '|')
-			splitted[*splitcount] = malloc_len_or_until_chr(input, &i,  2, NULL);
-		else if (input[i] == '|' && input[i + 1] != '|')
-			splitted[*splitcount] = malloc_len_or_until_chr(input, &i,  1, NULL);
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  2);
 		else if (input[i] == '>' && input[i + 1] == '>')
-			splitted[*splitcount] = malloc_len_or_until_chr(input, &i,  1, NULL);
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  2);
 		else if (input[i] == '<' && input[i + 1] == '<')
-			splitted[*splitcount] = malloc_len_or_until_chr(input, &i,  1, NULL);
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  2);
+		else if (input[i] == '|')
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  1);
+		else if (input[i] == '>')
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  1);
+		else if (input[i] == '<')
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  1);
+		else if (input[i] == ';')
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  1);
+		else if (input[i] == '&')
+			splitted[*splitcount] = strdup_len_and_move(input, &i,  1);
 		else
-			splitted[*splitcount] = malloc_len_or_until_chr(input, &i, 0, "<>|;& \"\'\t\n");
-		if (splitted[*splitcount] == NULL)
 		{
-			return (free_array(splitted, *splitcount), free(splitted), NULL);
+			len = 0;
+			while (input[i + len] && strchr("<>|;& \t\n", input[i + len]) == NULL)
+				len++;
+			splitted[*splitcount] = strdup_len_and_move(input, &i, len);
+			if (strchr("<>|;&", input[i]) != NULL)
+				i--;
 		}
+		if (splitted[*splitcount] == NULL)
+			return (free_array(splitted, *splitcount), free(splitted), NULL);
 		*splitcount += 1;
 	}
-	//printf("splitcount:%d\n", *splitcount);
 	return (splitted);
 }
 
@@ -316,15 +314,19 @@ int	main(int argc, char **argv)
 	int		glreturn;
 
 	if (argc > 1 && ((argv[1][0] == '-' && argv[1][1] == 'h') || !strcmp("--help", argv[1])))
-		return (printf("A simple program/shell to demonstrate pipes and control flow.\n"
+	{
+		printf("A simple program/shell to demonstrate pipes and control flow.\n"
 				"Limited to /usr/bin/* programs.\n\n"
-				"Usage: %s <command> [ [| && || ;] <command> ]\n", argv[0]), EXIT_SUCCESS);
-	if (argc > 1) return (exec_all(argc, argv));
+				"Usage: %s <command> [ [| && || ;] <command> ]\n", argv[0]);
+		return (EXIT_SUCCESS);
+	}
+	if (argc > 1)
+		return (exec_all(argc, argv));
 	argv++;
 	argc--;
-	while (1)
+	while (34 + 35 == 69)
 	{
-		write(1, "dumb shell> ", 12);
+		write(1, "use at own risk> ", 18);
 		glreturn = getline(&input, &inputsize, stdin);
 		if (glreturn < 0)
 			return (EXIT_FAILURE);
@@ -336,8 +338,11 @@ int	main(int argc, char **argv)
 		printf("Prepared Argv: [\n");
 			for (int i = 0; i < splitcount; ++i) printf("  `%s`, ", splitted[i]);
 		printf("]\n");
-		if (exec_all(splitcount, splitted))
-			return (free_array(splitted, splitcount), free(splitted), free(input), EXIT_FAILURE);
+	//	if (exec_all(splitcount, splitted))
+	//		return (free_array(splitted, splitcount), free(splitted), free(input), EXIT_FAILURE);
+		free_array(splitted, splitcount);
+		free(splitted);
+		splitted = NULL;
 	}
 	if (splitted)
 		(  free_array(splitted, splitcount), free(splitted)  );

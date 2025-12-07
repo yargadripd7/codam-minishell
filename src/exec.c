@@ -9,7 +9,7 @@ bool	ms_exec(t_parser *pa, t_info *info)
 	return (true);
 }
 
-bool	ms_initexec(t_shell *sh)
+bool	ms_execinit(t_shell *sh)
 {
 	//printf("ms_exec_init() not implemented!\n");
 	(void)sh;

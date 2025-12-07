@@ -36,8 +36,7 @@ bool	ms_flag_help(t_info *info, t_environ *env)
 		printf("  --%s -%c\n", info->flags[i].name, info->flags[i].letter);
 		printf("  %s\n",       info->flags[i].description);
 	}
-	var = ms_getenv("HOME", env);
-	printf("rc-file path: %s/.bashrc\n", *var->str);
+	printf("rc-file path: %s/.bashrc\n", ms_getvar("HOME", env)->key + 5);
 	printf("source: https://github.com/dorianligthart/codam-minishell\n");
 	return (true);
 }
@@ -122,9 +121,10 @@ bool	ms_parse_argv(t_info *info, t_environ *env, int argc, char **argv)
 {
 	char	*names[] = {"help", "version", "readcommand", "rcfile", "verbose",};
 	char	letters[] = {'h', 'v', 'c', 'r', 'V',};
-	char	*descriptions[] = {"prints this help message then exits.",
+	char	*descriptions[] = {
+	           "prints this help message then exits.",
 			   "prints the version number then exits.",
-			   "run commands at startup.",
+			   "run commands at startup. takes 1 string.",
 			   "run commands at startup from a file.",
 			   "will make the shell verbose in what it does."};
 	bool	(*fp[]) (t_info *, t_environ *) = {ms_flag_help, ms_flag_version,
@@ -137,9 +137,7 @@ bool	ms_parse_argv(t_info *info, t_environ *env, int argc, char **argv)
 	size_t	i = -1;
 	while (++i < MS_FLAG_COUNT)
 	{
-		if (names[i] && strlen(names[i]) == 1)
-			return (printf("Error: %s:%i '--%s' cant be a single character.\n",
-							__FILE__, __LINE__, names[i]), false);
+		assert (names[i] && strlen(names[i]) > 1 && "cant be empty or a single character");
 		info->flags[i].name        = names[i];
 		info->flags[i].letter      = letters[i];
 		info->flags[i].description = descriptions[i];

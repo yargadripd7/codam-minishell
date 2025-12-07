@@ -1,5 +1,3 @@
-Currently in development. I might continue the project, I might not. we
-shall see.
 You can test the simple version of this shell shell:
 
 ### `cd ./oldstuff/` and `make all` and `./simple-argv-shell.out`.

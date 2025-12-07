@@ -28,12 +28,12 @@ typedef struct t_flag
 
 typedef struct t_info
 {
-	size_t		input_count; //counts each userinput string for $PS1 and env
-	size_t		input_limit; //limit=-1 means unlimited
+	size_t		cmdcount; //counts each userinput string for $PS1 and env
+	size_t		cmdlimit; //limit=-1 means unlimited
 	bool		shell_should_quit; //it really should sometimes
 	bool		be_verbose; //foggin loggin'
-	char		*program_name; // should be ./minishell
-	t_flag		flags[MS_FLAG_COUNT]; //flaggies
+	char		*program_name; //would be ./minishell
+	t_flag		flags[MS_FLAG_COUNT];
 } t_info;
 
 bool	ms_parse_argv(t_info *info, t_environ *env, int argc, char **argv);

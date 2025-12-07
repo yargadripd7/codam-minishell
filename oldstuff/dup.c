@@ -50,7 +50,7 @@ int main() {
     return (EXIT_SUCCESS);
 }
 
-/* psuedo function for simple-argv-shell.c
+/* psuedo function for simple-shell.c
 #include <stdio.h>
 extern char **environ;
 int exec(int argc, char **argv, int *curr)

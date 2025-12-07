@@ -1,5 +1,5 @@
 source: (opengroup.org)[https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap08.html]
-Environment variable names used by the utilities in the Shell and Utilities volume of IEEE Std 1003.1-2001 consist solely of uppercase letters, digits, and the '_' (underscore) from the characters defined in Portable Character Set(https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap06.html#tagtcjh_3) and do not begin with a digit.
+Environment variable names used by the utilities in the Shell and Utilities volume of IEEE Std 1003.1-2001 consist solely of uppercase letters, digits, and the `\_` (underscore) from the characters defined in [Portable Character Set](https://pubs.opengroup.org/onlinepubs/009695399/basedefs/xbd_chap06.html#tagtcjh_3) and do not begin with a digit.
 
 source: `man sh`
 # The following environment variables shall affect the execution of sh:

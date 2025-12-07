@@ -1,5 +1,4 @@
 //rewrite of xxhash.h cause why not
-
 #include <stdint.h>
 #include <stddef.h>
 

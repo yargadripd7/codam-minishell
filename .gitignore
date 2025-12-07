@@ -3,6 +3,7 @@ src/getline/tests/readstdin
 src/tests/lexer
 minishell
 
+\.*
 #valgrind/ctags/vim:
 vgcore.*
 .vgcore

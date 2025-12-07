@@ -6,16 +6,18 @@
 #include <stdio.h>
 #include <readline/history.h>
 
-//home dir/user name:
-#include <sys/types.h>
-#include <pwd.h>
-//struct passwd	*pw = getpwuid(getuid());
-
 //local
 #include "minishell.h"
 #include "environ.h"
 #include "prompt.h"
 #include "utils.h"
+
+bool ms_promptinit(t_shell *sh)
+{
+	sh->ps1.var = ms_getvar("PS1", &sh->env);
+	sh->ps2.var = ms_getvar("PS2", &sh->env);
+	return (true);
+}
 
 bool ms_prompt_append(t_prompt *ps, char *src)
 {
@@ -47,7 +49,6 @@ bool ms_prompt_append(t_prompt *ps, char *src)
 #endif
 
 //default PS1='\s-\v\$ '
-//PS1='[\u@\h \W]\$ '
 static bool	ms_prompt_which(char c, t_prompt *p, t_info *info)
 {
 	char buf[MS_PROMPTBUFSIZE];
@@ -97,7 +98,7 @@ static bool	ms_prompt_which(char c, t_prompt *p, t_info *info)
 		return (ms_prompt_append(p, getcwd(NULL, 0))); //The basename of $PWD, with $HOME abbreviated with a tilde.
 	if (c == '!' && (!ms_itoa(&p->str, &p->size, strlen(p->str), where_history()))) //The history number of this command.
 		return (printf("\\!: ms_itoa() or ms_prompt_append() failed\n"), false);
-	if (c == '#' && (!ms_itoa(&p->str, &p->size, strlen(p->str), info->input_count))) //The command number of this command.
+	if (c == '#' && (!ms_itoa(&p->str, &p->size, strlen(p->str), info->cmdcount))) //The command number of this command.
 		return (printf("\\#: ms_itoa() or ms_prompt_append() failed\n"), false);
 	if (c == '$')
 		return (ms_prompt_append(p, (char *)((geteuid() == 0) * (size_t)"#" + (geteuid() != 0) * (size_t)"$"))); //If the effective uid is 0, #, otherwise $.

@@ -1,4 +1,4 @@
-CFLAGS = -fsanitize=address
+CFLAGS = #-fsanitize=address
 all:
 	cc -g $(CFLAGS) -o simple-shell.out simple-shell.c
 	cc -g $(CFLAGS) -o dup.out dup.c

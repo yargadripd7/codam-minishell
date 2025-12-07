@@ -3,13 +3,44 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef struct t_test
+const char *tokenstrs[] = {
+	[TOKEN_UNDEFINED]        = "TOKEN_UNDEFINED",
+	[TOKEN_WORD]             = "TOKEN_WORD",
+	[TOKEN_NL]               = "TOKEN_NL",
+	[TOKEN_AND]              = "TOKEN_AND",
+	[TOKEN_OR]               = "TOKEN_OR",
+	[TOKEN_END]              = "TOKEN_END",
+	[TOKEN_BG]               = "TOKEN_BG",
+	[TOKEN_PIPE_OUT]         = "TOKEN_PIPE_OUT",
+	[TOKEN_PIPE_OUT_AND_ERR] = "TOKEN_PIPE_OUT_AND_ERR",
+	[TOKEN_FILE]             = "TOKEN_FILE",
+	[TOKEN_SQUOTE]           = "TOKEN_SQUOTE",
+	[TOKEN_DQUOTE]           = "TOKEN_DQUOTE",
+	[TOKEN_CQUOTE]           = "TOKEN_CQUOTE",
+	[TOKEN_PARAM_ASSIGN]     = "TOKEN_PARAM_ASSIGN",
+	[TOKEN_PARAM_APPEND]     = "TOKEN_PARAM_APPEND",
+	[TOKEN_PARAM_EXPAN]      = "TOKEN_PARAM_EXPAN",
+	[TOKEN_REDIRECT_IN]      = "TOKEN_REDIRECT_IN",
+	[TOKEN_REDIRECT_OUT]     = "TOKEN_REDIRECT_OUT",
+	[TOKEN_HERE_DOCUMENT]    = "TOKEN_HERE_DOCUMENT",
+	[TOKEN_REDIRECT_APPEND]  = "TOKEN_REDIRECT_APPEND",
+	[TOKEN_EXITCODE]         = "TOKEN_EXITCODE",
+	[TOKEN_PID]              = "TOKEN_PID",
+	[TOKEN_TILDE]            = "TOKEN_TILDE",
+	[TOKEN_PATTERN_WILD]     = "TOKEN_PATTERN_WILD",
+	[TOKEN_PATTERN_CHAR]     = "TOKEN_PATTERN_CHAR",
+	[TOKEN_PATTERN_OPEN]     = "TOKEN_PATTERN_OPEN",
+	[TOKEN_ARITHMETIC]       = "TOKEN_ARITHMETIC",
+};
+//static_assert(sizeof(tokenstrs)/sizeof(*tokenstrs) == TOKEN_COUNT);
+
+typedef struct t_lexer_test
 {
 	const char	*string;
 	t_token		tokens[4];
-} t_test;
+} t_lexer_test;
 
-t_test tests[] = {
+t_lexer_test tests[] = {
 	{
 		.string = "var=123\n",
 		.tokens = {
@@ -47,7 +78,11 @@ t_test tests[] = {
 	}
 };
 
-int	main2(int argc, const char *argv[], const char **token_id_str)
+/*
+./lexer 'echo \'Hello World\' '
+./lexer 'HELLO=WORLD'
+*/
+int	main(int argc, const char *argv[])
 {
 	t_lexer	l;
 
@@ -68,39 +103,8 @@ int	main2(int argc, const char *argv[], const char **token_id_str)
 		int		id = l.tokens[i].id;
 		size_t	begin = l.tokens[i].begin;
 		size_t	end = l.tokens[i].end;
-		printf("'%.*s' = %s\n", (int)(end - begin), argv[1] + begin, token_id_str[id]);
+		printf("'%.*s' = %s\n", (int)(end - begin), argv[1] + begin, tokenstrs[id]);
 	}
 	return (0);
-}
-
-/*
-./lexer 'echo \'Hello World\' '
-./lexer 'HELLO=WORLD'
-*/
-int	main(int argc, const char *argv[])
-{
-	const char *token_id_str[TOKEN_COUNT] = {
-		[TOKEN_UNDEFINED]        = "undefined",
-		[TOKEN_WORD]             = "word",
-		[TOKEN_NL]               = "nl",
-		[TOKEN_AND]= "and", [TOKEN_OR] = "or", 
-		[TOKEN_END]= "end", [TOKEN_BG] = "bg",
-		[TOKEN_PIPE_OUT]         = "pipe_out",
-		[TOKEN_PIPE_OUT_AND_ERR] = "pipe_out_and_err",
-		[TOKEN_FILE]             = "file",
-		[TOKEN_SQUOTE]           = "squote",
-		[TOKEN_DQUOTE]           = "dquote",
-		[TOKEN_CQUOTE]           = "cquote",
-		[TOKEN_PARAM_ASSIGN]     = "param_assign",
-		[TOKEN_PARAM_EXPAN]      = "param_expan",
-		[TOKEN_REDIRECT_IN]      = "redirect_in",
-		[TOKEN_REDIRECT_OUT]     = "redirect_out",
-		[TOKEN_HERE_DOCUMENT]    = "here_document",
-		[TOKEN_REDIRECT_APPEND]  = "redirect_append",
-		[TOKEN_FILENAME_EXPAN]   = "filename_expan",
-		[TOKEN_EXITCODE]         = "exitcode",
-		[TOKEN_PID]              = "pid"};
-
-	return (main2(argc, argv, token_id_str));
 }
 

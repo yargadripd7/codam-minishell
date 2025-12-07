@@ -37,18 +37,19 @@ size_t	ms_strchrlen(char *str, int c)
 	return (ret);
 }
 
-void	*ms_expand_array(void **src, size_t *srcsize, size_t newsize)
+void	*ms_expand_array(void **src, size_t srcwidth, size_t *srcsize, size_t newsize)
 {
-	printf("about to malloc(%zu * %zu), old size=%zu\n", newsize, sizeof(**src), *srcsize);
 	void *dst;
 
-	dst = malloc(newsize * sizeof(**src));
-	if (src != NULL && dst != NULL)
+	//printf("ms_expand_array malloc(newsize:%zu * width:%zu), oldsize=%zu\n", newsize, srcwidth, *srcsize);
+	//fflush(stdout);
+	dst = malloc(newsize * srcwidth);
+	if (dst && *srcsize > 0)
 	{
-		memcpy(dst, *src, *srcsize * sizeof(**src));
-		memset(dst + *srcsize, '\0', newsize - *srcsize);
+		memcpy(dst, *src, *srcsize * srcwidth);
 		free(*src);
 	}
+	memset(dst + (*srcsize * srcwidth), '\0', (newsize - *srcsize) * srcwidth);
 	*srcsize = newsize;
 	*src = dst;
 	return (dst);
