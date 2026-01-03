@@ -1,4 +1,4 @@
-You can test the simple version of this shell shell:
+qYou can test the simple version of this shell shell:
 
 ### `cd ./oldstuff/` and `make all` and `./simple-argv-shell.out`.
 
